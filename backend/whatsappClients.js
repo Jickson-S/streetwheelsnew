@@ -10,14 +10,80 @@ const isRender = process.env.RENDER === 'true';
 const sessionBaseDir = process.env.WHATSAPP_SESSION_DIR || path.join(__dirname, '.whatsapp_sessions');
 
 process.env.PUPPETEER_CACHE_DIR = '/opt/render/.cache/puppeteer';
-console.log('Chrome path:', puppeteer.executablePath());
-
 // Helper to recursively locate the chrome binary in a directory
-function findChromeExecutable() {
-
+function findChromeExecutable(dir) {
+  try {
+    if (!fs.existsSync(dir)) return null;
+    
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const fullPath = path.join(dir, file);
+      let stat;
+      try {
+        stat = fs.statSync(fullPath);
+      } catch (err) {
+        continue;
+      }
+      
+      if (stat.isDirectory()) {
+        const found = findChromeExecutable(fullPath);
+        if (found) return found;
+      } else {
+        const isMacExecutable = file === 'Google Chrome for Testing' && fullPath.includes('Contents/MacOS');
+        const isLinuxExecutable = file === 'chrome' && !fullPath.includes('helper') && !fullPath.includes('crashpad');
+        const isWindowsExecutable = file === 'chrome.exe';
+        
+        if (isMacExecutable || isLinuxExecutable || isWindowsExecutable) {
+          return fullPath;
+        }
+      }
+    }
+  } catch (err) {
+    console.warn(`Error scanning directory ${dir}:`, err.message);
+  }
+  return null;
 }
 
-const puppeteerExecutablePath = findChromeExecutable();
+function getChromePath() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+    if (fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
+      return process.env.PUPPETEER_EXECUTABLE_PATH;
+    }
+  }
+
+  const searchDirs = [
+    path.join(__dirname, '.cache/puppeteer'),
+    '/opt/render/.cache/puppeteer',
+    path.join(__dirname, 'node_modules/puppeteer/.local-chromium'),
+  ];
+  
+  if (process.env.PUPPETEER_CACHE_DIR) {
+    searchDirs.unshift(process.env.PUPPETEER_CACHE_DIR);
+  }
+
+  for (const dir of searchDirs) {
+    const found = findChromeExecutable(dir);
+    if (found) return found;
+  }
+
+  return null;
+}
+
+async function resolveChromePath() {
+  let chromePath = getChromePath();
+  if (chromePath) {
+    return chromePath;
+  }
+
+  try {
+    const defaultPath = await puppeteer.executablePath();
+    return defaultPath;
+  } catch (err) {
+    console.warn('Failed to resolve default puppeteer executablePath:', err);
+  }
+
+  return null;
+}
 
 const botState = {
   bot1: {
@@ -100,12 +166,12 @@ async function reconnectBot(name) {
 }
 
 // Helper: initialize a client
-function initClient(name, dataPath) {
+function initClient(name, dataPath, chromePath) {
   const client = new Client({
     authStrategy: new LocalAuth({ dataPath }),
     puppeteer: {
       headless: true,
-      executablePath: puppeteer.executablePath(),
+      executablePath: chromePath,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -183,10 +249,13 @@ function initClient(name, dataPath) {
   return client;
 }
 
-if (isWhatsAppEnabled) {
-  console.log('📱 WhatsApp bots enabled');
-  if (puppeteer.executablePath()) {
-    console.log(`📍 Using Chrome: ${puppeteer.executablePath()}`);
+async function startBots() {
+  const chromePath = await resolveChromePath();
+  if (chromePath) {
+    console.log(`📍 Using Chrome: ${chromePath}`);
+    process.env.PUPPETEER_EXECUTABLE_PATH = chromePath;
+  } else {
+    console.warn('⚠️ No Chrome executable found. Launch might fail.');
   }
 
   const botSessionPaths = {
@@ -209,8 +278,15 @@ if (isWhatsAppEnabled) {
   });
 
   // Initialize both bots using clean runtime session folders
-  clients.bot1 = initClient('bot1', botSessionPaths.bot1);
-  clients.bot2 = initClient('bot2', botSessionPaths.bot2);
+  clients.bot1 = initClient('bot1', botSessionPaths.bot1, chromePath);
+  clients.bot2 = initClient('bot2', botSessionPaths.bot2, chromePath);
+}
+
+if (isWhatsAppEnabled) {
+  console.log('📱 WhatsApp bots enabled');
+  startBots().catch((error) => {
+    console.error('❌ Failed to start WhatsApp bots:', error.message || error);
+  });
 } else {
   console.log('📱 WhatsApp bots disabled by ENABLE_WHATSAPP=false');
 }

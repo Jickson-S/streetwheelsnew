@@ -1,3 +1,6 @@
 2026/06/21-19:09:12.777 18ab3 Reusing MANIFEST /Users/jicksons/my/streetwheelscars/backend/.whatsapp_sessions/bot2/session/Default/Local Storage/leveldb/MANIFEST-000001
 2026/06/21-19:09:12.781 18ab3 Recovering log #3
 2026/06/21-19:09:12.781 18ab3 Reusing old log /Users/jicksons/my/streetwheelscars/backend/.whatsapp_sessions/bot2/session/Default/Local Storage/leveldb/000003.log 
+2026/06/21-21:47:47.343 18ab6 Level-0 table #5: started
+2026/06/21-21:47:47.346 18ab6 Level-0 table #5: 21553 bytes OK
+2026/06/21-21:47:47.349 18ab6 Delete type=0 #3
