@@ -1,0 +1,12 @@
+2026/06/21-19:09:13.708 18a28 Reusing MANIFEST /Users/jicksons/my/streetwheelscars/backend/.whatsapp_sessions/bot1/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/MANIFEST-000001
+2026/06/21-19:09:13.709 18a28 Recovering log #74
+2026/06/21-19:09:13.795 18a28 Reusing old log /Users/jicksons/my/streetwheelscars/backend/.whatsapp_sessions/bot1/session/Default/IndexedDB/https_web.whatsapp.com_0.indexeddb.leveldb/000074.log 
+2026/06/21-21:34:37.958 18a49 Level-0 table #79: started
+2026/06/21-21:34:37.977 18a49 Level-0 table #79: 1186190 bytes OK
+2026/06/21-21:34:37.981 18a49 Delete type=0 #74
+2026/06/21-21:34:44.104 18a28 Compacting 1@1 + 1@2 files
+2026/06/21-21:34:44.154 18a28 Generated table #80@1: 38818 keys, 1907303 bytes
+2026/06/21-21:34:44.154 18a28 Compacted 1@1 + 1@2 files => 1907303 bytes
+2026/06/21-21:34:44.155 18a28 compacted to: files[ 0 0 1 0 0 0 0 ]
+2026/06/21-21:34:44.156 18a28 Delete type=2 #76
+2026/06/21-21:34:44.156 18a28 Delete type=2 #79
