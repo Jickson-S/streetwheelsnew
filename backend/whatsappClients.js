@@ -9,7 +9,7 @@ const isWhatsAppEnabled = process.env.ENABLE_WHATSAPP !== 'false';
 const isRender = process.env.RENDER === 'true';
 const sessionBaseDir = process.env.WHATSAPP_SESSION_DIR || path.join(__dirname, '.whatsapp_sessions');
 
-process.env.PUPPETEER_CACHE_DIR = '/opt/render/.cache/puppeteer';
+process.env.PUPPETEER_CACHE_DIR = path.join(__dirname, '.cache', 'puppeteer');
 // Helper to recursively locate the chrome binary in a directory
 function findChromeExecutable(dir) {
   try {
@@ -252,7 +252,11 @@ function initClient(name, dataPath, chromePath) {
 async function startBots() {
   const chromePath = await resolveChromePath();
   if (chromePath) {
-    console.log(`📍 Using Chrome: ${chromePath}`);
+    const exists = fs.existsSync(chromePath);
+    console.log(`📍 Using Chrome: ${chromePath} (exists: ${exists})`);
+    if (!exists) {
+      console.warn(`⚠️ Chrome executable was not found at resolved path: ${chromePath}`);
+    }
     process.env.PUPPETEER_EXECUTABLE_PATH = chromePath;
   } else {
     console.warn('⚠️ No Chrome executable found. Launch might fail.');
